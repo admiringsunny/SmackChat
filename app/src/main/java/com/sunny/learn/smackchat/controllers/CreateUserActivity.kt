@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import com.sunny.learn.smackchat.R
+import com.sunny.learn.smackchat.services.AuthService
 import kotlinx.android.synthetic.main.activity_create_user.*
 import java.util.*
 
@@ -51,5 +52,8 @@ class CreateUserActivity : AppCompatActivity() {
 
     fun createUserClicked(view: View) {
         Toast.makeText(this, "createUserClicked", Toast.LENGTH_SHORT).show()
+        AuthService.rsgisterUser(this, "a2.a@a.a","123" ){
+
+        }
     }
 }
