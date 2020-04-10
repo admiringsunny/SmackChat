@@ -1,14 +1,14 @@
 package com.sunny.learn.smackchat.services
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.sunny.learn.smackchat.utils.URL_CREATE_USER
-import com.sunny.learn.smackchat.utils.URL_LOGIN
-import com.sunny.learn.smackchat.utils.URL_REGISTER
+import com.sunny.learn.smackchat.utils.*
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -132,5 +132,44 @@ object AuthService {
 
         }
         Volley.newRequestQueue(context).add(requestCreateUser)
+    }
+
+    fun findUserByEmail(context: Context, complete: (Boolean) -> Unit) {
+        val findUserRequest= object : JsonObjectRequest(Method.GET, "$URL_FIND_USER$user", null,
+            Response.Listener {response ->
+                try {
+                    UserDataService.name = response.getString("name")
+                    UserDataService.email = response.getString("email")
+                    UserDataService.avatarName = response.getString("avatarName")
+                    UserDataService.avatarColor = response.getString("avatarColor")
+                    UserDataService.id = response.getString("_id")
+
+                    val userDataChange = Intent(BROADCAST_USER_CREATED)
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(userDataChange)
+
+                    complete(true)
+
+                } catch (e: JSONException) {
+                    Log.e("JSONException:", "Find User Failed: $e")
+                    complete(false)
+                }
+
+            }, Response.ErrorListener { error ->
+                Log.e("Error:", "Find User Failed: $error")
+                complete(false)
+            }) {
+
+            override fun getBodyContentType(): String {
+                return "application/json; charset=utf-8"
+            }
+
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                headers.put("Authorization", "Bearer $token")
+                return headers
+            }
+
+        }
+        Volley.newRequestQueue(context).add(findUserRequest)
     }
 }
