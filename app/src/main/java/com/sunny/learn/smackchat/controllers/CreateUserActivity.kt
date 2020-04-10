@@ -1,23 +1,42 @@
 package com.sunny.learn.smackchat.controllers
 
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.sunny.learn.smackchat.R
 import com.sunny.learn.smackchat.services.AuthService
+import com.sunny.learn.smackchat.utils.BROADCAST_USER_CREATED
 import kotlinx.android.synthetic.main.activity_create_user.*
 import java.util.*
 
 class CreateUserActivity : AppCompatActivity() {
 
-    private var avatar = "profileDefault"
+    private var avatarName = "profileDefault"
     private var avatarColor = "[0.5, 0.5, 0.5, 1]"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_user)
+        showPrograss(false)
+    }
+
+    private fun showPrograss(b: Boolean) {
+        if (b) {
+            progressBar.visibility = View.VISIBLE
+        } else {
+            progressBar.visibility = View.GONE
+        }
+        createUserNameText.isEnabled = !b
+        createEmailText.isEnabled = !b
+        createPasswordText.isEnabled = !b
+        textView2.isEnabled = !b
+        createAvatarImageView.isEnabled = !b
+        backgroundBtn.isEnabled = !b
+        createUserBtn.isEnabled = !b
     }
 
     fun generateUserAvater(view: View) {
@@ -25,10 +44,10 @@ class CreateUserActivity : AppCompatActivity() {
         val color = random.nextInt(2)
         val image = random.nextInt(28)
 
-        avatar = if (color == 0) "light$image" else "dark$image"
+        avatarName = if (color == 0) "light$image" else "dark$image"
         createAvatarImageView.setImageResource(
             resources.getIdentifier(
-                avatar,
+                avatarName,
                 "drawable",
                 packageName
             )
@@ -47,13 +66,62 @@ class CreateUserActivity : AppCompatActivity() {
 
         avatarColor = "[${r.toDouble() / 255}, ${g.toDouble() / 255}, ${b.toDouble() / 255}, 1]"
 //        Toast.makeText(this, "$avatarColor", Toast.LENGTH_SHORT).show()
-
     }
 
     fun createUserClicked(view: View) {
         Toast.makeText(this, "createUserClicked", Toast.LENGTH_SHORT).show()
-        AuthService.rsgisterUser(this, "a2.a@a.a","123" ){
+        val name = createUserNameText.text.toString()
+        val email = createEmailText.text.toString()
+        val password = createPasswordText.text.toString()
 
+        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "All Text Fields are mandatory", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        showPrograss(true)
+        AuthService.registerUser(this, email, password) { registerSuccess ->
+            if (registerSuccess) {
+                AuthService.loginUser(this, email, password) { loginSuccess ->
+                    if (loginSuccess) {
+                        AuthService.createUser(
+                            this,
+                            name,
+                            email,
+                            avatarName,
+                            avatarColor
+                        ) { userCreated ->
+                            if (userCreated) {
+                                val broadcastIntent = Intent(BROADCAST_USER_CREATED)
+                                LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
+                                Toast.makeText(this, "userCreated", Toast.LENGTH_SHORT).show()
+                                finish()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    "Something went wrong",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                            showPrograss(false)
+                        }
+                    } else {
+                        Toast.makeText(
+                            this,
+                            "Something went wrong",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        showPrograss(false)
+                    }
+                }
+            } else {
+                Toast.makeText(
+                    this,
+                    "Something went wrong",
+                    Toast.LENGTH_LONG
+                ).show()
+                showPrograss(false)
+            }
         }
     }
 }

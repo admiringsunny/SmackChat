@@ -1,6 +1,9 @@
 package com.sunny.learn.smackchat.controllers
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -12,7 +15,12 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.sunny.learn.smackchat.R
+import com.sunny.learn.smackchat.services.AuthService
+import com.sunny.learn.smackchat.services.UserDataService
+import com.sunny.learn.smackchat.utils.BROADCAST_USER_CREATED
+import kotlinx.android.synthetic.main.nav_header_main.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,6 +45,24 @@ class MainActivity : AppCompatActivity() {
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            userDataReceiver, IntentFilter(
+                BROADCAST_USER_CREATED
+            )
+        )
+    }
+
+    private val userDataReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (AuthService.isLoggedIn) {
+                userNameNavHeader.text = UserDataService.name
+                userEmailNavHeader.text = UserDataService.email
+                val resourceId = resources.getIdentifier(UserDataService.avatarName, "drawable", packageName)
+                userImageNavHeader.setImageResource(resourceId)
+                loginBtmNavHeader.text = "Logout"
+            }
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
