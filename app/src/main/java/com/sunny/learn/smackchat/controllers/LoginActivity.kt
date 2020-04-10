@@ -14,12 +14,32 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+        showProgress(false)
+    }
+
+    private fun showProgress(boolean: Boolean) {
+        if (!boolean) {
+            loginProgressBar.visibility = View.GONE
+        } else {
+            loginProgressBar.visibility = View.VISIBLE
+        }
+        loginEmailText.isEnabled = !boolean
+        loginPasswordText.isEnabled = !boolean
+        loginLoginBtn.isEnabled = !boolean
+        textView.isEnabled = !boolean
+        loginCreateUserBtn.isEnabled = !boolean
     }
 
     fun loginLoginBtnClicked(view: View) {
-        Toast.makeText(this, "loginLoginBtnClicked", Toast.LENGTH_SHORT).show()
+
         val email = loginEmailText.text.toString()
         val password = loginPasswordText.text.toString()
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "All Fields are Mandatory", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        showProgress(true)
         AuthService.loginUser(this, email, password) { loginSuccess ->
             if (loginSuccess) {
                 AuthService.findUserByEmail(this) { findSuccess ->
@@ -27,7 +47,10 @@ class LoginActivity : AppCompatActivity() {
                         finish()
                     }
                 }
+            } else {
+                Toast.makeText(this, "All Fields are Mandatory", Toast.LENGTH_SHORT).show()
             }
+            showProgress(false)
         }
     }
 

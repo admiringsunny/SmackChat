@@ -3,6 +3,7 @@ package com.sunny.learn.smackchat.services
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -69,6 +70,8 @@ object AuthService {
             }, Response.ErrorListener { error ->
                 Log.e("Error:", "Login Failed: $error")
                 complete(false)
+                Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
+
             }) {
             override fun getBodyContentType(): String {
                 return "application/json; charset=utf-8"
@@ -135,8 +138,8 @@ object AuthService {
     }
 
     fun findUserByEmail(context: Context, complete: (Boolean) -> Unit) {
-        val findUserRequest= object : JsonObjectRequest(Method.GET, "$URL_FIND_USER$user", null,
-            Response.Listener {response ->
+        val findUserRequest = object : JsonObjectRequest(Method.GET, "$URL_FIND_USER$user", null,
+            Response.Listener { response ->
                 try {
                     UserDataService.name = response.getString("name")
                     UserDataService.email = response.getString("email")
@@ -157,6 +160,7 @@ object AuthService {
             }, Response.ErrorListener { error ->
                 Log.e("Error:", "Find User Failed: $error")
                 complete(false)
+                Toast.makeText(context, "Find User Failed", Toast.LENGTH_SHORT).show()
             }) {
 
             override fun getBodyContentType(): String {
