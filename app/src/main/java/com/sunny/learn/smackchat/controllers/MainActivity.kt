@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -56,10 +57,20 @@ class MainActivity : AppCompatActivity() {
     private val userDataReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (AuthService.isLoggedIn) {
+
+                val imageResId =
+                    resources.getIdentifier(UserDataService.avatarName, "drawable", packageName)
+                val r: Int = (UserDataService.avatarColor.replace("[", "").replace("]", "")
+                    .split(",")[0]).trim().toInt()
+                val g: Int = (UserDataService.avatarColor.replace("[", "").replace("]", "")
+                    .split(",")[1]).trim().toInt()
+                val b: Int = (UserDataService.avatarColor.replace("[", "").replace("]", "")
+                    .split(",")[2]).trim().toInt()
+
                 userNameNavHeader.text = UserDataService.name
                 userEmailNavHeader.text = UserDataService.email
-                val resourceId = resources.getIdentifier(UserDataService.avatarName, "drawable", packageName)
-                userImageNavHeader.setImageResource(resourceId)
+                userImageNavHeader.setImageResource(imageResId)
+                userImageNavHeader.setBackgroundColor(Color.rgb(r, g, b))
                 loginBtmNavHeader.text = "Logout"
             }
         }
@@ -71,7 +82,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun loginBtmNavClicked(view: View) {
-        startActivity(Intent(this, LoginActivity::class.java))
+        if (AuthService.isLoggedIn) {
+            UserDataService.logout()
+            userImageNavHeader.setImageResource(R.drawable.profiledefault)
+            userImageNavHeader.setBackgroundColor(Color.TRANSPARENT)
+            userNameNavHeader.text = ""
+            userEmailNavHeader.text = ""
+            loginBtmNavHeader.text = "Login"
+        } else
+            startActivity(Intent(this, LoginActivity::class.java))
     }
 
     fun addChannelClicked(view: View) {

@@ -64,7 +64,8 @@ class CreateUserActivity : AppCompatActivity() {
         createAvatarImageView.setBackgroundColor(Color.rgb(r, g, b))
 //        Toast.makeText(this, "$r, $g, $b", Toast.LENGTH_SHORT).show()
 
-        avatarColor = "[${r.toDouble() / 255}, ${g.toDouble() / 255}, ${b.toDouble() / 255}, 1]"
+//        avatarColor = "[${r.toDouble() / 255}, ${g.toDouble() / 255}, ${b.toDouble() / 255}, 1]"
+        avatarColor = "[$r, $g, $b, 1]"
 //        Toast.makeText(this, "$avatarColor", Toast.LENGTH_SHORT).show()
     }
 

@@ -14,8 +14,8 @@ import org.json.JSONObject
 
 object AuthService {
 
-    private var user = ""
-    private var token = ""
+    var user = ""
+    var token = ""
     var isLoggedIn = false
 
     fun registerUser(
