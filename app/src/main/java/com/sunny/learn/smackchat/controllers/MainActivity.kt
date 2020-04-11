@@ -20,13 +20,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.sunny.learn.smackchat.R
+import com.sunny.learn.smackchat.model.Channel
 import com.sunny.learn.smackchat.services.AuthService
+import com.sunny.learn.smackchat.services.MessageService
 import com.sunny.learn.smackchat.services.UserDataService
 import com.sunny.learn.smackchat.utils.BROADCAST_USER_CREATED
-import com.sunny.learn.smackchat.utils.hideKeyboard
+import com.sunny.learn.smackchat.utils.SOCKET_URI
+import com.sunny.learn.smackchat.utils.URL_BASE
+import io.socket.client.IO
+import io.socket.emitter.Emitter
 import kotlinx.android.synthetic.main.nav_header_main.*
 
 class MainActivity : AppCompatActivity() {
+
+    val socket = IO.socket(SOCKET_URI)
 
     private lateinit var appBarConfiguration: AppBarConfiguration
 
@@ -49,13 +56,23 @@ class MainActivity : AppCompatActivity() {
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
+        socket.connect()
+        socket.on("channelCreated", onNewChannel)
+    }
 
+    override fun onResume() {
         LocalBroadcastManager.getInstance(this).registerReceiver(
             userDataReceiver, IntentFilter(
                 BROADCAST_USER_CREATED
             )
         )
-        hideKeyboard(this)
+        super.onResume()
+    }
+
+    override fun onDestroy() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(userDataReceiver)
+        socket.disconnect()
+        super.onDestroy()
     }
 
     private val userDataReceiver = object : BroadcastReceiver() {
@@ -108,17 +125,29 @@ class MainActivity : AppCompatActivity() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_channel, null)
         builder.setView(dialogView)
             .setPositiveButton("Add") { dialogInterface, i ->
-
-                val diag_channel_name = (dialogView.findViewById<EditText>(R.id.diag_channel_name)).text.toString()
-                val add_channel_desc = (dialogView.findViewById<EditText>(R.id.add_channel_desc)).text.toString()
-
-                hideKeyboard(this)
+                val diag_channel_name =
+                    (dialogView.findViewById<EditText>(R.id.diag_channel_name)).text.toString()
+                val add_channel_desc =
+                    (dialogView.findViewById<EditText>(R.id.add_channel_desc)).text.toString()
+                socket.emit("newChannel", diag_channel_name, add_channel_desc)
             }
             .setNegativeButton("Cancel") { dialogInterface, i ->
 
-                hideKeyboard(this)
             }
             .show()
+    }
+
+    private val onNewChannel = Emitter.Listener { args ->
+        runOnUiThread {
+            val name = args[0] as String
+            val description = args[1] as String
+            val id = args[2] as String
+
+            val channel = Channel(name, description, id)
+            MessageService.channels.add(channel)
+
+            println("Channel ${channel.name}")
+        }
     }
 
     fun sendMessageBtnClicked(view: View) {
