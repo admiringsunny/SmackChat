@@ -7,7 +7,9 @@ import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -21,6 +23,7 @@ import com.sunny.learn.smackchat.R
 import com.sunny.learn.smackchat.services.AuthService
 import com.sunny.learn.smackchat.services.UserDataService
 import com.sunny.learn.smackchat.utils.BROADCAST_USER_CREATED
+import com.sunny.learn.smackchat.utils.hideKeyboard
 import kotlinx.android.synthetic.main.nav_header_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -52,6 +55,7 @@ class MainActivity : AppCompatActivity() {
                 BROADCAST_USER_CREATED
             )
         )
+        hideKeyboard(this)
     }
 
     private val userDataReceiver = object : BroadcastReceiver() {
@@ -94,7 +98,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun addChannelClicked(view: View) {
+
+        if (!AuthService.isLoggedIn) {
+            Toast.makeText(this, "Please login !", Toast.LENGTH_SHORT).show()
+            return
+        }
         Toast.makeText(this, "addChannelClicked", Toast.LENGTH_SHORT).show()
+        val builder = AlertDialog.Builder(this)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_channel, null)
+        builder.setView(dialogView)
+            .setPositiveButton("Add") { dialogInterface, i ->
+
+                val diag_channel_name = (dialogView.findViewById<EditText>(R.id.diag_channel_name)).text.toString()
+                val add_channel_desc = (dialogView.findViewById<EditText>(R.id.add_channel_desc)).text.toString()
+
+                hideKeyboard(this)
+            }
+            .setNegativeButton("Cancel") { dialogInterface, i ->
+
+                hideKeyboard(this)
+            }
+            .show()
     }
 
     fun sendMessageBtnClicked(view: View) {
