@@ -19,6 +19,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.GravityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.sunny.learn.smackchat.R
 import com.sunny.learn.smackchat.model.Channel
@@ -31,10 +32,12 @@ import com.sunny.learn.smackchat.utils.URL_BASE
 import io.socket.client.IO
 import io.socket.emitter.Emitter
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var selectedChannel: Channel
     private lateinit var channelAdapter: ArrayAdapter<Channel>
     val socket = IO.socket(SOCKET_URI)
 
@@ -68,6 +71,14 @@ class MainActivity : AppCompatActivity() {
             MessageService.channels
         )
         channel_list.adapter = channelAdapter
+        channel_list.setOnItemClickListener { _, _, i, _ ->
+            selectedChannel = MessageService.channels[i]
+            drawerLayout.closeDrawer(GravityCompat.START)
+            showSelectedChannel()
+        }
+        if (App.prefs.isUserLoggedIn) {
+            AuthService.findUserByEmail(this){}
+        }
     }
 
     override fun onResume() {
@@ -87,7 +98,7 @@ class MainActivity : AppCompatActivity() {
 
     private val userDataReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
-            if (AuthService.isLoggedIn) {
+            if (App.prefs.isUserLoggedIn) {
 
                 val imageResId =
                     resources.getIdentifier(UserDataService.avatarName, "drawable", packageName)
@@ -104,13 +115,21 @@ class MainActivity : AppCompatActivity() {
                 userImageNavHeader.setBackgroundColor(Color.rgb(r, g, b))
                 loginBtmNavHeader.text = "Logout"
 
-                MessageService.getChannels(context){ complete ->
+                MessageService.getChannels{ complete ->
                     if (complete) {
-                        channelAdapter.notifyDataSetChanged()
+                        if (MessageService.channels.count() > 0) {
+                            channelAdapter.notifyDataSetChanged()
+                            selectedChannel = MessageService.channels[0]
+                            showSelectedChannel()
+                        }
                     }
                 }
             }
         }
+    }
+
+    private fun showSelectedChannel() {
+        mainChannelName.text = "#${selectedChannel.name}"
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -119,7 +138,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun loginBtmNavClicked(view: View) {
-        if (AuthService.isLoggedIn) {
+        if (App.prefs.isUserLoggedIn) {
             UserDataService.logout()
             userImageNavHeader.setImageResource(R.drawable.profiledefault)
             userImageNavHeader.setBackgroundColor(Color.TRANSPARENT)
@@ -132,7 +151,7 @@ class MainActivity : AppCompatActivity() {
 
     fun addChannelClicked(view: View) {
 
-        if (!AuthService.isLoggedIn) {
+        if (!App.prefs.isUserLoggedIn) {
             Toast.makeText(this, "Please login !", Toast.LENGTH_SHORT).show()
             return
         }

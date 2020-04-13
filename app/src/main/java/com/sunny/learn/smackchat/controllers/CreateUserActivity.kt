@@ -81,12 +81,11 @@ class CreateUserActivity : AppCompatActivity() {
         }
 
         showPrograss(true)
-        AuthService.registerUser(this, email, password) { registerSuccess ->
+        AuthService.registerUser(email, password) { registerSuccess ->
             if (registerSuccess) {
                 AuthService.loginUser(this, email, password) { loginSuccess ->
                     if (loginSuccess) {
                         AuthService.createUser(
-                            this,
                             name,
                             email,
                             avatarName,
@@ -94,7 +93,8 @@ class CreateUserActivity : AppCompatActivity() {
                         ) { userCreated ->
                             if (userCreated) {
                                 val broadcastIntent = Intent(BROADCAST_USER_CREATED)
-                                LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
+                                LocalBroadcastManager.getInstance(this)
+                                    .sendBroadcast(broadcastIntent)
                                 Toast.makeText(this, "userCreated", Toast.LENGTH_SHORT).show()
                                 finish()
                             } else {

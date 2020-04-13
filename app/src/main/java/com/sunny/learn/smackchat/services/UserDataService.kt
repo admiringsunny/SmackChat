@@ -1,6 +1,7 @@
 package com.sunny.learn.smackchat.services
 
 import android.graphics.Color
+import com.sunny.learn.smackchat.controllers.App
 
 object UserDataService {
     var id = ""
@@ -16,8 +17,8 @@ object UserDataService {
         avatarName = ""
         avatarColor = ""
 
-        AuthService.user = ""
-        AuthService.token = ""
-        AuthService. isLoggedIn = false
+        App.prefs.userEmail = ""
+        App.prefs.userToken = ""
+        App.prefs.isUserLoggedIn = false
     }
 }
